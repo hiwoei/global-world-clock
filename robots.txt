@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hiwoei.github.io/global-world-clock/sitemap.xml
