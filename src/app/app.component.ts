@@ -1750,12 +1750,12 @@ export class AppComponent implements OnInit, OnDestroy {
     const h = Math.floor(waitMinutes / 60);
     const m = waitMinutes % 60;
     if (h > 0 && m > 0) {
-      return `冷卻後等 ${h} 小時 ${m} 分`;
+      return `冷卻完成後再等 ${h} 小時 ${m} 分`;
     }
     if (h > 0) {
-      return `冷卻後等 ${h} 小時`;
+      return `冷卻完成後再等 ${h} 小時`;
     }
-    return `冷卻後等 ${m} 分`;
+    return `冷卻完成後再等 ${m} 分`;
   }
 
   getFilteredScheduleRows(): ScheduleRow[] {
