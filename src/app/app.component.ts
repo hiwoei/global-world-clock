@@ -27,7 +27,7 @@ interface ScheduleRow extends EventLocation {
   startAbsMinutes: number;
 }
 
-type ActiveTab = 'cooldown' | 'schedule' | 'clock';
+type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
 @Component({
   selector: 'app-root',
@@ -88,6 +88,9 @@ type ActiveTab = 'cooldown' | 'schedule' | 'clock';
           </button>
           <button type="button" class="tab-button" [class.active]="activeTab === 'schedule'" (click)="setActiveTab('schedule')">
             活動時段/區域分類
+          </button>
+          <button type="button" class="tab-button" [class.active]="activeTab === 'official'" (click)="setActiveTab('official')">
+            官方時間換算
           </button>
         </nav>
 
@@ -317,6 +320,78 @@ type ActiveTab = 'cooldown' | 'schedule' | 'clock';
           </div>
         </section>
 
+        <section class="tab-panel" *ngIf="activeTab === 'official'">
+          <div class="panel-heading">
+            <div>
+              <h2>官方當地時間換算</h2>
+              <p>適用於官方公告已指定「某地當地時間」的活動。選擇活動地點並輸入官方公告的當地日期時間，系統會換算成台灣時間。</p>
+            </div>
+            <span class="hint-pill">此功能不同於「活動時段/區域分類」的全球接力時段表；這裡是單一地點的官方當地時間換算。</span>
+          </div>
+
+          <div class="official-grid">
+            <label class="form-field">
+              <span>官方活動地點</span>
+              <select [(ngModel)]="officialLocationIndex">
+                <option *ngFor="let row of officialLocations; let i = index" [ngValue]="i">
+                  {{ row.flag }} {{ row.country }} {{ row.city }}｜{{ row.place }}
+                </option>
+              </select>
+            </label>
+
+            <label class="form-field">
+              <span>官方當地日期</span>
+              <input type="date" [(ngModel)]="officialLocalDate">
+            </label>
+
+            <label class="form-field">
+              <span>官方當地時間</span>
+              <input
+                type="text"
+                class="time-input"
+                inputmode="numeric"
+                maxlength="5"
+                placeholder="10:00"
+                [(ngModel)]="officialLocalTime"
+                (blur)="normalizeOfficialTime()">
+            </label>
+
+            <div class="planner-summary">
+              <span>換算後台灣時間</span>
+              <strong>{{ getOfficialTaiwanDateTime() }}</strong>
+              <small>{{ getOfficialOffsetText() }}</small>
+            </div>
+          </div>
+
+          <div class="result-grid official-result-grid">
+            <article class="result-card">
+              <h3>活動當地時間</h3>
+              <ng-container *ngIf="getOfficialSelectedLocation() as officialLocation">
+                <div class="mini-row">
+                  <div class="flag">{{ officialLocation.flag }}</div>
+                  <div>
+                    <strong>{{ officialLocation.country }} {{ officialLocation.city }}</strong>
+                    <span>{{ officialLocation.place }}｜{{ officialLocation.timeZone }}</span>
+                    <span>當地時間：{{ getFormattedOfficialLocalDateTime() }}</span>
+                    <span>GPS：{{ officialLocation.lat.toFixed(4) }},{{ officialLocation.lon.toFixed(4) }}</span>
+                  </div>
+                </div>
+              </ng-container>
+            </article>
+
+            <article class="result-card emphasis">
+              <h3>台灣時間換算結果</h3>
+              <div class="best-time">{{ getOfficialTaiwanDateTime() }}</div>
+              <p class="result-note">
+                例如官方寫「巴西聖保羅當地 2026/6/23 10:00」，本功能會依聖保羅時區換算成台灣時間。
+              </p>
+              <p class="result-note">
+                注意：若官方活動不是依全球接力時段，而是指定某地當地時間，請使用本分頁，不要用「活動時段/區域分類」判斷。
+              </p>
+            </article>
+          </div>
+        </section>
+
         <section class="tab-panel" *ngIf="activeTab === 'clock'">
           <div class="toolbar-section">
             <div class="section-heading">
@@ -476,6 +551,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'clock';
           <li><strong>時間對照：</strong>保留原本 RWD、手機點選 bar、桌機 hover、搜尋、Open-Meteo 動態查詢、距離與 API 錯誤處理，並以年月日時顯示各地當地時間。</li>
           <li><strong>冷卻銜接：</strong>依台灣活動時間與冷卻時間推算下一個可參與國家，預設使用當日「14:00 活動、18:00 起算冷卻、2 小時後銜接」。</li>
           <li><strong>活動時段/區域分類：</strong>採用固定全球活動地點清單，活動開始會先列出台灣目前活動開始日期時間，後續地點依全球活動時間順序往後推算，並在同一分頁依 GPS 自動判斷東西半球與南北半球；只列地點分布，不寫死會隨活動變動的限定內容清單。</li>
+          <li><strong>官方時間換算：</strong>當官方公告指定某地當地日期時間時，可選擇地點並輸入官方當地時間，系統會換算成台灣時間，避免和全球活動接力時段混用。</li>
         </ul>
         <p class="disclaimer-note">
           本工具為非官方玩家自用時間與地點對照工具；不使用官方圖像、Logo 或角色素材，亦不表示與任何遊戲公司或品牌有合作、授權或認可關係。
@@ -710,6 +786,17 @@ type ActiveTab = 'cooldown' | 'schedule' | 'clock';
       margin-bottom: 18px;
     }
 
+    .official-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 1.5fr) minmax(160px, 0.85fr) minmax(120px, 0.65fr) minmax(260px, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .official-result-grid {
+      margin-top: 4px;
+    }
+
     .form-field {
       display: grid;
       gap: 8px;
@@ -739,6 +826,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'clock';
     }
 
     .form-field input,
+    .form-field select,
     .search-input {
       width: 100%;
       padding: 13px 14px;
@@ -754,6 +842,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'clock';
     }
 
     .form-field input:focus,
+    .form-field select:focus,
     .search-input:focus {
       border-color: #7DD3FC;
       background-color: rgba(15, 23, 42, 0.9);
@@ -1299,6 +1388,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'clock';
 
       .quick-stats,
       .planner-grid,
+      .official-grid,
       .result-grid,
       .exclusive-grid,
       .hemisphere-grid {
@@ -1457,6 +1547,10 @@ export class AppComponent implements OnInit, OnDestroy {
   plannerCooldownStartTime: string = '18:00';
   plannerCooldownHours: number = 2;
 
+  officialLocationIndex: number = 0;
+  officialLocalDate: string = '';
+  officialLocalTime: string = '10:00';
+
   currentTaipeiTotalMinutes: number = 0;
   hoveredCity: CityData | null = null;
   focusedCity: CityData | null = null;
@@ -1539,6 +1633,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initializePlannerDefaults();
+    this.initializeOfficialDefaults();
     this.buildScheduleRows();
     this.rebuildCityLists();
     this.resetToNow();
@@ -1575,6 +1670,86 @@ export class AppComponent implements OnInit, OnDestroy {
     this.plannerCooldownStartDate = today;
     this.plannerCooldownStartTime = '18:00';
     this.plannerCooldownHours = 2;
+  }
+
+  private initializeOfficialDefaults(): void {
+    const saoPauloIndex = this.eventLocations.findIndex(row =>
+      row.country === '巴西' && row.city === '聖保羅'
+    );
+
+    this.officialLocationIndex = saoPauloIndex >= 0 ? saoPauloIndex : 0;
+    this.officialLocalDate = this.plannerStartDate;
+    this.officialLocalTime = '10:00';
+  }
+
+  get officialLocations(): EventLocation[] {
+    return this.eventLocations;
+  }
+
+  getOfficialSelectedLocation(): EventLocation | null {
+    return this.eventLocations[this.officialLocationIndex] ?? null;
+  }
+
+  normalizeOfficialTime(): void {
+    this.officialLocalTime = this.normalizeTimeText(this.officialLocalTime);
+  }
+
+  getOfficialLocalDateTimeValue(): string {
+    return `${this.officialLocalDate}T${this.normalizeTimeText(this.officialLocalTime)}`;
+  }
+
+  getFormattedOfficialLocalDateTime(): string {
+    return this.formatPlannerDateTime(this.getOfficialLocalDateTimeValue());
+  }
+
+  getOfficialTaiwanDateTime(): string {
+    const location = this.getOfficialSelectedLocation();
+    const parsed = this.parseDateTimeLocal(this.getOfficialLocalDateTimeValue());
+
+    if (!location || !parsed) {
+      return '日期時間未設定';
+    }
+
+    const utcMs = this.getUtcMsFromZonedLocalTime(
+      parsed.year,
+      parsed.month,
+      parsed.day,
+      parsed.hour,
+      parsed.minute,
+      location.timeZone
+    );
+
+    const taipeiDisplayMs = utcMs + (8 * 60 * 60 * 1000);
+    return this.formatTaipeiDisplayDateTime(taipeiDisplayMs);
+  }
+
+  getOfficialOffsetText(): string {
+    const location = this.getOfficialSelectedLocation();
+    const parsed = this.parseDateTimeLocal(this.getOfficialLocalDateTimeValue());
+
+    if (!location || !parsed) {
+      return '請先選擇地點與日期時間';
+    }
+
+    const utcMs = this.getUtcMsFromZonedLocalTime(
+      parsed.year,
+      parsed.month,
+      parsed.day,
+      parsed.hour,
+      parsed.minute,
+      location.timeZone
+    );
+    const locationOffset = this.getTimeZoneOffsetHoursAtUtc(utcMs, location.timeZone);
+    const diff = 8 - locationOffset;
+
+    if (diff === 0) {
+      return `${location.city} 與台灣無時差`;
+    }
+
+    const diffText = this.formatHourDuration(Math.abs(diff));
+    return diff > 0
+      ? `台灣比 ${location.city} 快 ${diffText}`
+      : `台灣比 ${location.city} 慢 ${diffText}`;
   }
 
   private buildScheduleRows(): void {
@@ -2166,6 +2341,86 @@ export class AppComponent implements OnInit, OnDestroy {
     const safeH = Number.isFinite(h) ? Math.min(Math.max(h, 0), 23) : 0;
     const safeM = Number.isFinite(m) ? Math.min(Math.max(m, 0), 59) : 0;
     return `${String(safeH).padStart(2, '0')}:${String(safeM).padStart(2, '0')}`;
+  }
+
+  private getUtcMsFromZonedLocalTime(year: number, month: number, day: number, hour: number, minute: number, timeZone: string): number {
+    const desiredWallMs = Date.UTC(year, month - 1, day, hour, minute, 0);
+    let utcMs = desiredWallMs;
+
+    // 將「指定時區的牆上時間」反推成 UTC。用迭代可處理大多數 DST / 時區偏移情況。
+    for (let i = 0; i < 4; i++) {
+      const zonedParts = this.getZonedDateTimeParts(new Date(utcMs), timeZone);
+      const actualWallMs = Date.UTC(
+        zonedParts.year,
+        zonedParts.month - 1,
+        zonedParts.day,
+        zonedParts.hour,
+        zonedParts.minute,
+        0
+      );
+      const diffMs = actualWallMs - desiredWallMs;
+
+      if (diffMs === 0) {
+        break;
+      }
+
+      utcMs -= diffMs;
+    }
+
+    return utcMs;
+  }
+
+  private getTimeZoneOffsetHoursAtUtc(utcMs: number, timeZone: string): number {
+    const zonedParts = this.getZonedDateTimeParts(new Date(utcMs), timeZone);
+    const zonedWallMs = Date.UTC(
+      zonedParts.year,
+      zonedParts.month - 1,
+      zonedParts.day,
+      zonedParts.hour,
+      zonedParts.minute,
+      0
+    );
+
+    return (zonedWallMs - utcMs) / (60 * 60 * 1000);
+  }
+
+  private getZonedDateTimeParts(date: Date, timeZone: string): { year: number; month: number; day: number; hour: number; minute: number } {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23'
+    });
+
+    const parts = formatter.formatToParts(date);
+    const getPart = (type: string): number => Number(parts.find(p => p.type === type)?.value ?? 0);
+
+    return {
+      year: getPart('year'),
+      month: getPart('month'),
+      day: getPart('day'),
+      hour: getPart('hour'),
+      minute: getPart('minute')
+    };
+  }
+
+  private formatHourDuration(hours: number): string {
+    const totalMinutes = Math.round(hours * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+
+    if (h > 0 && m > 0) {
+      return `${h} 小時 ${m} 分`;
+    }
+
+    if (h > 0) {
+      return `${h} 小時`;
+    }
+
+    return `${m} 分`;
   }
 
   private parseDateTimeLocal(value: string): { year: number; month: number; day: number; hour: number; minute: number } | null {
