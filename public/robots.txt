@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://hiwoei.github.io/global-world-clock/sitemap.xml
+Sitemap: https://global-world-clock.pages.dev/sitemap.xml
