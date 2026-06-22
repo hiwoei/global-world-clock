@@ -90,7 +90,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
             活動時段/區域分類
           </button>
           <button type="button" class="tab-button" [class.active]="activeTab === 'official'" (click)="setActiveTab('official')">
-            官方時間換算
+            活動時間換算
           </button>
         </nav>
 
@@ -323,7 +323,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
         <section class="tab-panel" *ngIf="activeTab === 'official'">
           <div class="panel-heading">
             <div>
-              <h2>官方當地時間換算</h2>
+              <h2>當地活動時間換算</h2>
               <p>適用於官方公告已指定「某地當地時間」的活動。選擇活動地點並輸入官方公告的當地日期時間，系統會換算成台灣時間。</p>
             </div>
             <span class="hint-pill">此功能不同於「活動時段/區域分類」的全球接力時段表；這裡是單一地點的官方當地時間換算。</span>
@@ -551,7 +551,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
           <li><strong>時間對照：</strong>保留原本 RWD、手機點選 bar、桌機 hover、搜尋、Open-Meteo 動態查詢、距離與 API 錯誤處理，並以年月日時顯示各地當地時間。</li>
           <li><strong>冷卻銜接：</strong>依台灣活動時間與冷卻時間推算下一個可參與國家，預設使用當日「14:00 活動、18:00 起算冷卻、2 小時後銜接」。</li>
           <li><strong>活動時段/區域分類：</strong>採用固定全球活動地點清單，活動開始會先列出台灣目前活動開始日期時間，後續地點依全球活動時間順序往後推算，並在同一分頁依 GPS 自動判斷東西半球與南北半球；只列地點分布，不寫死會隨活動變動的限定內容清單。</li>
-          <li><strong>官方時間換算：</strong>當官方公告指定某地當地日期時間時，可選擇地點並輸入官方當地時間，系統會換算成台灣時間，避免和全球活動接力時段混用。</li>
+          <li><strong>活動時間換算：</strong>當公告指定某地當地日期時間時，可選擇地點並輸入該地當地時間，系統會換算成台灣時間，避免和全球活動接力時段混用。</li>
         </ul>
         <p class="disclaimer-note">
           本工具為非官方玩家自用時間與地點對照工具；不使用官方圖像、Logo 或角色素材，亦不表示與任何遊戲公司或品牌有合作、授權或認可關係。
