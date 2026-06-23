@@ -76,6 +76,14 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
             <p>依固定全球活動地點建立清單，包含國家、地點與座標。</p>
           </div>
         </article>
+
+        <article class="stat-card">
+          <span class="stat-icon">🌐</span>
+          <div>
+            <strong>活動時間換算</strong>
+            <p>官方公告某地當地時間時，可直接換算成台灣日期時間。</p>
+          </div>
+        </article>
       </section>
 
       <section class="tab-card">
@@ -665,7 +673,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
     .quick-stats {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 16px;
       margin-bottom: 22px;
     }
@@ -710,6 +718,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
     .tab-nav {
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       padding: 14px;
       border-bottom: 1px solid rgba(148, 163, 184, 0.18);
@@ -719,6 +728,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
     }
 
     .tab-button {
+      flex: 0 0 auto;
       appearance: none;
       border: 1px solid rgba(148, 163, 184, 0.18);
       border-radius: 999px;
@@ -841,6 +851,16 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
       transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
     }
 
+    .form-field select {
+      min-width: 0;
+      text-overflow: ellipsis;
+    }
+
+    .form-field select option {
+      background: #0F172A;
+      color: #FFFFFF;
+    }
+
     .form-field input:focus,
     .form-field select:focus,
     .search-input:focus {
@@ -945,6 +965,8 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
       font-size: 32px;
       font-weight: 900;
       color: #7DD3FC;
+      line-height: 1.22;
+      overflow-wrap: anywhere;
     }
 
     .best-place {
@@ -1376,6 +1398,16 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
       line-height: 1.7;
     }
 
+    @media (max-width: 1100px) {
+      .quick-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .official-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
     @media (max-width: 900px) {
       .page-shell {
         width: min(100% - 28px, 760px);
@@ -1447,6 +1479,11 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
         padding: 22px 18px;
       }
 
+      .card-time {
+        font-size: 24px;
+        white-space: normal;
+      }
+
       .quick-stats {
         gap: 10px;
         margin: 0 14px 14px;
@@ -1461,13 +1498,18 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
         position: sticky;
         top: 0;
         z-index: 5;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
         padding: 10px 12px;
+        overflow-x: visible;
       }
 
       .tab-button {
-        flex: 0 0 auto;
-        min-width: 96px;
-        padding: 10px 14px;
+        width: 100%;
+        min-width: 0;
+        padding: 10px 8px;
+        font-size: 13px;
       }
 
       .tab-panel {
@@ -1479,8 +1521,23 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
         font-size: 21px;
       }
 
-      .planner-grid {
+      .planner-grid,
+      .official-grid {
         gap: 12px;
+      }
+
+      .datetime-pair {
+        grid-template-columns: 1fr;
+      }
+
+      .planner-summary strong {
+        font-size: 18px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+      }
+
+      .best-time {
+        font-size: 24px;
       }
 
       .schedule-toolbar {
@@ -1531,6 +1588,20 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
       .feature-description {
         padding: 22px 18px 30px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .tab-nav {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-content {
+        padding: 24px 16px;
+      }
+
+      .tab-panel {
+        padding: 16px 12px;
       }
     }
   `]
