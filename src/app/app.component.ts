@@ -158,7 +158,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
                   <div class="flag">{{ item.flag }}</div>
                   <div>
                     <strong>{{ item.country }} {{ item.city }}</strong>
-                    <span>{{ item.place }}｜{{ item.lat.toFixed(4) }},{{ item.lon.toFixed(4) }}</span>
+                    <span>{{ item.place }}｜{{ item.lat.toFixed(5) }},{{ item.lon.toFixed(5) }}</span>
                   </div>
                 </div>
               </div>
@@ -174,7 +174,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
                 <div class="best-time">{{ formatAbsMinutes(getScheduleStartAbsMinutes(best)) }}</div>
                 <div class="best-place">{{ best.flag }} {{ best.country }} {{ best.city }}</div>
                 <div class="best-sub">{{ best.place }}</div>
-                <div class="gps-line">GPS：{{ best.lat.toFixed(4) }},{{ best.lon.toFixed(4) }}</div>
+                <div class="gps-line">GPS：{{ best.lat.toFixed(5) }},{{ best.lon.toFixed(5) }}</div>
                 <p class="result-note">
                   原因：此地點活動開始時間最接近且不早於可銜接時間 {{ getFormattedPlannerReadyDateTime() }}。
                 </p>
@@ -211,7 +211,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
                       <strong>{{ row.flag }} {{ row.country }} {{ row.city }}</strong>
                       <small>{{ row.place }}</small>
                     </td>
-                    <td>{{ row.lat.toFixed(4) }},{{ row.lon.toFixed(4) }}</td>
+                    <td>{{ row.lat.toFixed(5) }},{{ row.lon.toFixed(5) }}</td>
                     <td>{{ getRecommendationReason(row) }}</td>
                   </tr>
                 </tbody>
@@ -373,7 +373,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
                     <strong>{{ officialLocation.country }} {{ officialLocation.city }}</strong>
                     <span>{{ officialLocation.place }}｜{{ officialLocation.timeZone }}</span>
                     <span>當地時間：{{ getFormattedOfficialLocalDateTime() }}</span>
-                    <span>GPS：{{ officialLocation.lat.toFixed(4) }},{{ officialLocation.lon.toFixed(4) }}</span>
+                    <span>GPS：{{ officialLocation.lat.toFixed(5) }},{{ officialLocation.lon.toFixed(5) }}</span>
                   </div>
                 </div>
               </ng-container>
@@ -1593,7 +1593,7 @@ export class AppComponent implements OnInit, OnDestroy {
     { flag: '🇮🇸', country: '冰島', city: '雷克雅維克', place: '音樂廳公園', lat: 64.1412, lon: -21.9440, timeZone: 'Atlantic/Reykjavik', startDayOffset: 0, startTime: '22:00', searchKeys: 'iceland reykjavik harpa park 冰島 雷克雅維克 音樂廳公園' },
     { flag: '🇨🇻', country: '維德角', city: '普拉亞', place: '民族博物館', lat: 14.9213, lon: -23.5070, timeZone: 'Atlantic/Cape_Verde', startDayOffset: 0, startTime: '23:00', searchKeys: 'cape verde praia museum 維德角 普拉亞 民族博物館' },
     { flag: '🇧🇷', country: '巴西', city: '聖米格爾', place: '宮殿', lat: -3.8406, lon: -32.4108, timeZone: 'America/Noronha', startDayOffset: 1, startTime: '00:00', searchKeys: 'brazil sao miguel palace 巴西 聖米格爾 宮殿' },
-    { flag: '🇧🇷', country: '巴西', city: '聖保羅', place: '伊比拉布埃拉公園', lat: -23.5880, lon: -46.6551, timeZone: 'America/Sao_Paulo', startDayOffset: 1, startTime: '01:00', searchKeys: 'brazil sao paulo ibirapuera park 巴西 聖保羅 伊比拉布埃拉公園' },
+    { flag: '🇧🇷', country: '巴西', city: '聖保羅', place: '伊比拉布埃拉公園', lat: -23.58815, lon: -46.65464, timeZone: 'America/Sao_Paulo', startDayOffset: 1, startTime: '01:00', searchKeys: 'brazil sao paulo ibirapuera park 巴西 聖保羅 伊比拉布埃拉公園' },
     { flag: '🇺🇸', country: '美國', city: '紐約', place: '中央公園', lat: 40.7796, lon: -73.9644, timeZone: 'America/New_York', startDayOffset: 1, startTime: '02:00', searchKeys: 'usa new york central park 美國 紐約 中央公園' },
     { flag: '🇵🇪', country: '秘魯', city: '利馬', place: '錢凱廣場', lat: -11.5629, lon: -77.2701, timeZone: 'America/Lima', startDayOffset: 1, startTime: '03:00', searchKeys: 'peru lima plaza 秘魯 利馬 錢凱廣場' },
     { flag: '🇲🇽', country: '墨西哥', city: '墨西哥城', place: '城市公園', lat: 19.4192, lon: -99.1808, timeZone: 'America/Mexico_City', startDayOffset: 1, startTime: '04:00', searchKeys: 'mexico mexico city park 墨西哥 墨西哥城 城市公園' },
@@ -1774,7 +1774,7 @@ export class AppComponent implements OnInit, OnDestroy {
       name: `${location.flag} ${location.country} ${location.city} ${location.place}`,
       utcOffset: this.parseUtcOffsetFromTimezone(location.timeZone),
       isReference: location.country === '台灣' && location.city === '台北',
-      searchKeys: `${location.searchKeys} ${location.lat.toFixed(4)} ${location.lon.toFixed(4)}`,
+      searchKeys: `${location.searchKeys} ${location.lat.toFixed(5)} ${location.lon.toFixed(5)}`,
       distanceKm: this.calculateDistanceToTaipei(location.lat, location.lon)
     };
   }
@@ -1938,7 +1938,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     const rows = keyword
       ? this.scheduleRows.filter(row => {
-          const gps = `${row.lat.toFixed(4)},${row.lon.toFixed(4)}`;
+          const gps = `${row.lat.toFixed(5)},${row.lon.toFixed(5)}`;
           return `${row.country} ${row.city} ${row.place} ${row.searchKeys} ${gps}`.toLowerCase().includes(keyword);
         })
       : [...this.scheduleRows];
@@ -1971,7 +1971,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   getGpsText(row: EventLocation): string {
-    return `${row.lat.toFixed(4)},${row.lon.toFixed(4)}`;
+    return `${row.lat.toFixed(5)},${row.lon.toFixed(5)}`;
   }
 
   isGpsCopied(row: EventLocation): boolean {
