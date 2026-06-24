@@ -54,10 +54,10 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
       <section class="quick-stats" aria-label="功能摘要">
         <article class="stat-card">
-          <span class="stat-icon">🕒</span>
+          <span class="stat-icon">📍</span>
           <div>
-            <strong>時間對照</strong>
-            <p>以台灣年月日時為基準，快速對應各活動地點的當地日期時間。</p>
+            <strong>活動時段 / GPS 清單</strong>
+            <p>先看全球活動開始時間、GPS 點位與東西 / 南北半球分類。</p>
           </div>
         </article>
 
@@ -70,35 +70,35 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
         </article>
 
         <article class="stat-card">
-          <span class="stat-icon">📍</span>
+          <span class="stat-icon">🌐</span>
           <div>
-            <strong>活動地點 GPS 清單</strong>
-            <p>依固定全球活動地點建立清單，包含國家、地點與座標。</p>
+            <strong>官方時間換算</strong>
+            <p>官方公告某地當地時間時，可直接換算成台灣日期時間。</p>
           </div>
         </article>
 
         <article class="stat-card">
-          <span class="stat-icon">🌐</span>
+          <span class="stat-icon">🕒</span>
           <div>
-            <strong>活動時間換算</strong>
-            <p>官方公告某地當地時間時，可直接換算成台灣日期時間。</p>
+            <strong>時間對照</strong>
+            <p>以台灣年月日時為基準，快速對應各活動地點的當地日期時間。</p>
           </div>
         </article>
       </section>
 
       <section class="tab-card">
         <nav class="tab-nav" aria-label="主要功能分頁">
-          <button type="button" class="tab-button" [class.active]="activeTab === 'clock'" (click)="setActiveTab('clock')">
-            時間對照
+          <button type="button" class="tab-button" [class.active]="activeTab === 'schedule'" (click)="setActiveTab('schedule')">
+            活動時段
           </button>
           <button type="button" class="tab-button" [class.active]="activeTab === 'cooldown'" (click)="setActiveTab('cooldown')">
             冷卻銜接
           </button>
-          <button type="button" class="tab-button" [class.active]="activeTab === 'schedule'" (click)="setActiveTab('schedule')">
-            活動時段/區域分類
-          </button>
           <button type="button" class="tab-button" [class.active]="activeTab === 'official'" (click)="setActiveTab('official')">
-            活動時間換算
+            官方時間
+          </button>
+          <button type="button" class="tab-button" [class.active]="activeTab === 'clock'" (click)="setActiveTab('clock')">
+            時間對照
           </button>
         </nav>
 
@@ -235,6 +235,30 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               <p>活動開始會先列出「台灣」目前活動開始日期時間，後續地點再依全球活動時間順序往後推算，並保留 GPS 點位與半球分類。</p>
             </div>
              
+          </div>
+
+          <div class="schedule-start-grid">
+            <label class="form-field">
+              <span>目前活動開始日期時間</span>
+              <div class="datetime-pair">
+                <input type="date" [(ngModel)]="plannerStartDate" (ngModelChange)="onPlannerChanged()">
+                <input
+                  type="text"
+                  class="time-input"
+                  inputmode="numeric"
+                  maxlength="5"
+                  placeholder="14:00"
+                  [(ngModel)]="plannerStartTime"
+                  (ngModelChange)="onPlannerChanged()"
+                  (blur)="normalizePlannerTimes()">
+              </div>
+            </label>
+
+            <div class="planner-summary">
+              <span>活動時段基準</span>
+              <strong>{{ getFormattedPlannerStartDateTime() }}</strong>
+              <small>此欄位會和「冷卻銜接」分頁的目前活動開始日期時間同步。</small>
+            </div>
           </div>
 
           <div class="schedule-toolbar">
@@ -556,10 +580,10 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
       <section class="feature-description">
         <h3>功能完整說明</h3>
         <ul>
-          <li><strong>時間對照：</strong>保留原本 RWD、手機點選 bar、桌機 hover、搜尋、Open-Meteo 動態查詢、距離與 API 錯誤處理，並以年月日時顯示各地當地時間。</li>
-          <li><strong>冷卻銜接：</strong>依台灣活動時間與冷卻時間推算下一個可參與國家，預設使用當日「14:00 活動、18:00 起算冷卻、2 小時後銜接」。</li>
           <li><strong>活動時段/區域分類：</strong>採用固定全球活動地點清單，活動開始會先列出台灣目前活動開始日期時間，後續地點依全球活動時間順序往後推算，並在同一分頁依 GPS 自動判斷東西半球與南北半球；只列地點分布，不寫死會隨活動變動的限定內容清單。</li>
+          <li><strong>冷卻銜接：</strong>依台灣活動時間與冷卻時間推算下一個可參與國家，預設使用當日「14:00 活動、18:00 起算冷卻、2 小時後銜接」。</li>
           <li><strong>活動時間換算：</strong>當公告指定某地當地日期時間時，可選擇地點並輸入該地當地時間，系統會換算成台灣時間，避免和全球活動接力時段混用。</li>
+          <li><strong>時間對照：</strong>保留原本 RWD、手機點選 bar、桌機 hover、搜尋、Open-Meteo 動態查詢、距離與 API 錯誤處理，並以年月日時顯示各地當地時間。</li>
         </ul>
         <p class="disclaimer-note">
           本工具為非官方玩家自用時間與地點對照工具；不使用官方圖像、Logo 或角色素材，亦不表示與任何遊戲公司或品牌有合作、授權或認可關係。
@@ -794,6 +818,14 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 18px;
+    }
+
+    .schedule-start-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 420px) minmax(260px, 1fr);
+      gap: 14px;
+      align-items: stretch;
+      margin-bottom: 16px;
     }
 
     .official-grid {
@@ -1420,6 +1452,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
       .quick-stats,
       .planner-grid,
+      .schedule-start-grid,
       .official-grid,
       .result-grid,
       .exclusive-grid,
@@ -1522,6 +1555,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
       }
 
       .planner-grid,
+      .schedule-start-grid,
       .official-grid {
         gap: 12px;
       }
@@ -1607,7 +1641,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
   `]
 })
 export class AppComponent implements OnInit, OnDestroy {
-  activeTab: ActiveTab = 'clock';
+  activeTab: ActiveTab = 'schedule';
 
   searchText: string = '';
   eventSearchText: string = '';
