@@ -196,7 +196,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
           <div class="mobile-table-card">
             <h3>冷卻後可銜接清單</h3>
-            <div class="responsive-table">
+            <div class="responsive-table desktop-data-table">
               <table>
                 <thead>
                   <tr>
@@ -219,12 +219,142 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
                       <strong>{{ row.flag }} {{ row.country }} {{ row.city }}</strong>
                       <small>{{ row.place }}</small>
                     </td>
-                    <td>{{ row.lat.toFixed(5) }},{{ row.lon.toFixed(5) }}</td>
+                    <td>
+                      <button
+                        type="button"
+                        class="gps-button"
+                        [class.copied]="isGpsCopied(row)"
+                        [attr.aria-label]="isGpsCopied(row) ? 'GPS 已複製' : '複製 GPS'"
+                        (click)="copyGps(row)">
+                        <span class="gps-value">{{ getGpsText(row) }}</span>
+                        <span class="copy-label">{{ isGpsCopied(row) ? '已複製' : '複製' }}</span>
+                      </button>
+                    </td>
                     <td>{{ getRecommendationReason(row) }}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
+
+            <div class="mobile-card-list">
+              <article class="list-card" [class.best]="isBestRecommendation(row)" *ngFor="let row of getPlannerRows()">
+                <div class="list-card-header">
+                  <div>
+                    <span class="list-card-time">{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}</span>
+                    <h4>{{ row.flag }} {{ row.country }} {{ row.city }}</h4>
+                  </div>
+                  <span class="status-badge" [class.best]="isBestRecommendation(row)">
+                    {{ isBestRecommendation(row) ? '最佳' : '可接' }}
+                  </span>
+                </div>
+
+                <div class="list-card-body">
+                  <div class="list-card-field">
+                    <span>地點</span>
+                    <strong>{{ row.place }}</strong>
+                  </div>
+
+                  <div class="list-card-field">
+                    <span>GPS</span>
+                    <button
+                      type="button"
+                      class="gps-button"
+                      [class.copied]="isGpsCopied(row)"
+                      [attr.aria-label]="isGpsCopied(row) ? 'GPS 已複製' : '複製 GPS'"
+                      (click)="copyGps(row)">
+                      <span class="gps-value">{{ getGpsText(row) }}</span>
+                      <span class="copy-label">{{ isGpsCopied(row) ? '已複製' : '複製' }}</span>
+                    </button>
+                  </div>
+
+                  <div class="list-card-field">
+                    <span>狀態</span>
+                    <strong>{{ getRecommendationReason(row) }}</strong>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+
+
+          <div class="mobile-table-card cooldown-reference-card">
+            <h3>寶可夢 GO 冷卻時間參考表</h3>
+            <p class="result-note">
+              依兩次會觸發冷卻的遊戲操作地點距離估算建議等待時間；超過一定距離後，冷卻時間通常以 2 小時為上限。
+            </p>
+
+            <div class="responsive-table">
+              <table class="cooldown-reference-table">
+                <thead>
+                  <tr>
+                    <th>移動距離</th>
+                    <th>建議等待時間</th>
+                    <th>說明</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="time-cell">1 km 內</td>
+                    <td>約 30 秒～1 分鐘</td>
+                    <td>同一區域短距離移動，仍建議稍等再操作。</td>
+                  </tr>
+                  <tr>
+                    <td class="time-cell">5 km</td>
+                    <td>約 2 分鐘</td>
+                    <td>同城市小範圍移動。</td>
+                  </tr>
+                  <tr>
+                    <td class="time-cell">10 km</td>
+                    <td>約 6～8 分鐘</td>
+                    <td>跨區移動。</td>
+                  </tr>
+                  <tr>
+                    <td class="time-cell">25 km</td>
+                    <td>約 11～15 分鐘</td>
+                    <td>跨市或較遠區域。</td>
+                  </tr>
+                  <tr>
+                    <td class="time-cell">50 km</td>
+                    <td>約 18～24 分鐘</td>
+                    <td>跨縣市距離。</td>
+                  </tr>
+                  <tr>
+                    <td class="time-cell">100 km</td>
+                    <td>約 26～35 分鐘</td>
+                    <td>較長距離移動。</td>
+                  </tr>
+                  <tr>
+                    <td class="time-cell">250 km</td>
+                    <td>約 45～46 分鐘</td>
+                    <td>跨區域移動。</td>
+                  </tr>
+                  <tr>
+                    <td class="time-cell">500 km</td>
+                    <td>約 60～65 分鐘</td>
+                    <td>跨國或跨大區域。</td>
+                  </tr>
+                  <tr>
+                    <td class="time-cell">750 km</td>
+                    <td>約 75～85 分鐘</td>
+                    <td>長距離跨國。</td>
+                  </tr>
+                  <tr>
+                    <td class="time-cell">1,000 km</td>
+                    <td>約 90～105 分鐘</td>
+                    <td>大範圍跨國。</td>
+                  </tr>
+                  <tr>
+                    <td class="time-cell">1,500 km 以上</td>
+                    <td>120 分鐘</td>
+                    <td>超過此距離後，冷卻時間通常以 2 小時計。</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="rule-note">
+              冷卻時間會依兩次會觸發冷卻的遊戲操作地點距離而不同。表格為玩家社群常用參考值，實際操作建議多等待 1～3 分鐘，避免壓秒造成誤判。
+            </p>
           </div>
         </section>
 
@@ -266,7 +396,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
             <button type="button" class="btn-reset compact" (click)="eventSearchText = ''">清除</button>
           </div>
 
-          <div class="responsive-table">
+          <div class="responsive-table desktop-data-table">
             <table>
               <thead>
                 <tr>
@@ -301,6 +431,42 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <div class="mobile-card-list schedule-mobile-cards">
+            <article class="list-card" *ngFor="let row of getFilteredScheduleRows()">
+              <div class="list-card-header">
+                <div>
+                  <span class="list-card-time">{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}</span>
+                  <h4>{{ row.flag }} {{ row.country }} {{ row.city }}</h4>
+                </div>
+              </div>
+
+              <div class="list-card-body">
+                <div class="list-card-field">
+                  <span>地點</span>
+                  <strong>{{ row.place }}</strong>
+                </div>
+
+                <div class="list-card-field">
+                  <span>GPS</span>
+                  <button
+                    type="button"
+                    class="gps-button"
+                    [class.copied]="isGpsCopied(row)"
+                    [attr.aria-label]="isGpsCopied(row) ? 'GPS 已複製' : '複製 GPS'"
+                    (click)="copyGps(row)">
+                    <span class="gps-value">{{ getGpsText(row) }}</span>
+                    <span class="copy-label">{{ isGpsCopied(row) ? '已複製' : '複製' }}</span>
+                  </button>
+                </div>
+
+                <div class="list-card-tags">
+                  <span class="hemi-tag">{{ getNorthSouth(row) }}</span>
+                  <span class="hemi-tag">{{ getEastWest(row) }}</span>
+                </div>
+              </div>
+            </article>
           </div>
 
 
@@ -1034,6 +1200,91 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
       border: 1px solid rgba(148, 163, 184, 0.16);
     }
 
+    .mobile-card-list {
+      display: none;
+    }
+
+    .list-card {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background:
+        linear-gradient(160deg, rgba(15, 23, 42, 0.78), rgba(2, 6, 23, 0.52));
+      border-radius: 18px;
+      padding: 15px;
+      box-shadow: 0 14px 34px rgba(2, 6, 23, 0.24);
+    }
+
+    .list-card.best {
+      border-color: rgba(250, 204, 21, 0.38);
+      background:
+        linear-gradient(160deg, rgba(250, 204, 21, 0.12), rgba(2, 6, 23, 0.52));
+    }
+
+    .list-card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .list-card-header h4 {
+      margin: 6px 0 0;
+      color: #FFFFFF;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .list-card-time {
+      display: inline-flex;
+      color: #7DD3FC;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .list-card-body {
+      display: grid;
+      gap: 12px;
+    }
+
+    .list-card-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .list-card-field > span {
+      color: #94A3B8;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .list-card-field strong {
+      color: #E2E8F0;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .list-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .cooldown-reference-card {
+      margin-top: 18px;
+    }
+
+    .cooldown-reference-card .responsive-table {
+      margin-top: 12px;
+    }
+
+    .cooldown-reference-table {
+      min-width: 680px;
+    }
+
     table {
       width: 100%;
       min-width: 900px;
@@ -1581,6 +1832,40 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
       .responsive-table {
         border-radius: 14px;
+      }
+
+      .desktop-data-table {
+        display: none;
+      }
+
+      .mobile-card-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .mobile-card-list + .region-note-section {
+        margin-top: 22px;
+      }
+
+      .list-card-header {
+        align-items: flex-start;
+      }
+
+      .list-card-header .status-badge {
+        flex: 0 0 auto;
+      }
+
+      .list-card .gps-button {
+        width: 100%;
+        justify-content: space-between;
+        border-radius: 14px;
+        padding: 9px 10px;
+        white-space: normal;
+      }
+
+      .list-card .gps-value {
+        overflow-wrap: anywhere;
+        text-align: left;
       }
 
       table {
