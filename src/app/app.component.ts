@@ -108,7 +108,21 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               <h2>冷卻銜接建議</h2>
               <p>輸入你目前參與活動的台灣時間，系統會列出該時段國家，並依冷卻結束時間推薦下一個最合適銜接地點。</p>
             </div>
-            <span class="hint-pill">預設：當日 14:00 活動，當日 18:00 起算冷卻；可銜接時間由「冷卻開始日期時間 + 冷卻時間」即時計算。</span>
+            <div class="panel-actions">
+              <span class="hint-pill">預設：當日 14:00 活動，當日 18:00 起算冷卻；可銜接時間由「冷卻開始日期時間 + 冷卻時間」即時計算。</span>
+              <button type="button" class="help-button" [class.active]="isHelpOpen('cooldown')" (click)="toggleHelp('cooldown')" aria-label="冷卻銜接使用說明" title="使用說明">?</button>
+            </div>
+          </div>
+
+          <div class="help-card" *ngIf="isHelpOpen('cooldown')">
+            <h3>冷卻銜接使用步驟</h3>
+            <ol>
+              <li>輸入「目前活動開始日期時間」，例如台灣活動為 2026/07/07 10:00，就填該日期與時間。</li>
+              <li>輸入「活動持續時間」，例如 10:00～19:00 就填 9 小時。</li>
+              <li>輸入你最後一次操作後開始冷卻的日期時間，例如 18:00。</li>
+              <li>輸入冷卻時間，長距離通常以 2 小時為上限。</li>
+              <li>系統會列出冷卻完成後仍可參與，或即將開始的銜接地點，並標出最佳建議。</li>
+            </ol>
           </div>
 
           <div class="planner-grid">
@@ -117,10 +131,9 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               <div class="datetime-pair">
                 <input type="date" [(ngModel)]="plannerStartDate" (ngModelChange)="onPlannerChanged()">
                 <input
-                  type="text"
+                  type="time"
                   class="time-input"
-                  inputmode="numeric"
-                  maxlength="5"
+                  step="60"
                   placeholder="14:00"
                   [(ngModel)]="plannerStartTime"
                   (ngModelChange)="onPlannerChanged()"
@@ -129,14 +142,18 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
             </label>
 
             <label class="form-field">
+              <span>活動持續時間（小時）</span>
+              <input type="number" min="0.5" max="24" step="0.5" [(ngModel)]="plannerEventDurationHours" (ngModelChange)="onPlannerChanged()">
+            </label>
+
+            <label class="form-field">
               <span>冷卻開始日期時間</span>
               <div class="datetime-pair">
                 <input type="date" [(ngModel)]="plannerCooldownStartDate" (ngModelChange)="onPlannerChanged()">
                 <input
-                  type="text"
+                  type="time"
                   class="time-input"
-                  inputmode="numeric"
-                  maxlength="5"
+                  step="60"
                   placeholder="18:00"
                   [(ngModel)]="plannerCooldownStartTime"
                   (ngModelChange)="onPlannerChanged()"
@@ -180,6 +197,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               <h3>最佳銜接建議</h3>
               <ng-container *ngIf="getBestRecommendation() as best; else noBest">
                 <div class="best-time">{{ formatAbsMinutes(getScheduleStartAbsMinutes(best)) }}</div>
+                <div class="best-sub">活動至：{{ formatAbsMinutes(getScheduleEndAbsMinutes(best)) }}</div>
                 <div class="best-place">{{ best.flag }} {{ best.country }} {{ best.city }}</div>
                 <div class="best-sub">{{ best.place }}</div>
                 <div class="gps-line">GPS：{{ best.lat.toFixed(5) }},{{ best.lon.toFixed(5) }}</div>
@@ -196,12 +214,12 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
           <div class="mobile-table-card">
             <h3>冷卻後可銜接清單</h3>
-            <div class="responsive-table desktop-data-table">
+            <div class="responsive-table desktop-list-table">
               <table>
                 <thead>
                   <tr>
                     <th>推薦</th>
-                    <th>台灣時間</th>
+                    <th>活動時段（台灣時間）</th>
                     <th>國家 / 地點</th>
                     <th>GPS</th>
                     <th>狀態</th>
@@ -214,7 +232,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
                         {{ isBestRecommendation(row) ? '最佳' : '可接' }}
                       </span>
                     </td>
-                    <td>{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}</td>
+                    <td>{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}～{{ formatAbsMinutes(getScheduleEndAbsMinutes(row)) }}</td>
                     <td>
                       <strong>{{ row.flag }} {{ row.country }} {{ row.city }}</strong>
                       <small>{{ row.place }}</small>
@@ -236,42 +254,26 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               </table>
             </div>
 
-            <div class="mobile-card-list">
-              <article class="list-card" [class.best]="isBestRecommendation(row)" *ngFor="let row of getPlannerRows()">
-                <div class="list-card-header">
-                  <div>
-                    <span class="list-card-time">{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}</span>
-                    <h4>{{ row.flag }} {{ row.country }} {{ row.city }}</h4>
-                  </div>
+            <div class="mobile-card-list cooldown-card-list">
+              <article class="list-item-card" [class.best-card]="isBestRecommendation(row)" *ngFor="let row of getPlannerRows()">
+                <div class="card-row-top">
                   <span class="status-badge" [class.best]="isBestRecommendation(row)">
                     {{ isBestRecommendation(row) ? '最佳' : '可接' }}
                   </span>
+                  <strong>{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}～{{ formatAbsMinutes(getScheduleEndAbsMinutes(row)) }}</strong>
                 </div>
-
-                <div class="list-card-body">
-                  <div class="list-card-field">
-                    <span>地點</span>
-                    <strong>{{ row.place }}</strong>
-                  </div>
-
-                  <div class="list-card-field">
-                    <span>GPS</span>
-                    <button
-                      type="button"
-                      class="gps-button"
-                      [class.copied]="isGpsCopied(row)"
-                      [attr.aria-label]="isGpsCopied(row) ? 'GPS 已複製' : '複製 GPS'"
-                      (click)="copyGps(row)">
-                      <span class="gps-value">{{ getGpsText(row) }}</span>
-                      <span class="copy-label">{{ isGpsCopied(row) ? '已複製' : '複製' }}</span>
-                    </button>
-                  </div>
-
-                  <div class="list-card-field">
-                    <span>狀態</span>
-                    <strong>{{ getRecommendationReason(row) }}</strong>
-                  </div>
-                </div>
+                <div class="card-place">{{ row.flag }} {{ row.country }} {{ row.city }}</div>
+                <div class="card-sub">{{ row.place }}</div>
+                <button
+                  type="button"
+                  class="gps-button card-gps-button"
+                  [class.copied]="isGpsCopied(row)"
+                  [attr.aria-label]="isGpsCopied(row) ? 'GPS 已複製' : '複製 GPS'"
+                  (click)="copyGps(row)">
+                  <span class="gps-value">{{ getGpsText(row) }}</span>
+                  <span class="copy-label">{{ isGpsCopied(row) ? '已複製' : '複製' }}</span>
+                </button>
+                <div class="card-note">{{ getRecommendationReason(row) }}</div>
               </article>
             </div>
           </div>
@@ -364,7 +366,18 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               <h2>全球活動時段 / 區域分類</h2>
               <p>活動開始會先列出「台灣」目前活動開始日期時間，後續地點再依全球活動時間順序往後推算，並保留 GPS 點位與半球分類。</p>
             </div>
-             
+            <button type="button" class="help-button" [class.active]="isHelpOpen('schedule')" (click)="toggleHelp('schedule')" aria-label="活動時段使用說明" title="使用說明">?</button>
+          </div>
+
+          <div class="help-card" *ngIf="isHelpOpen('schedule')">
+            <h3>活動時段使用步驟</h3>
+            <ol>
+              <li>輸入台灣這場活動的開始日期與時間。</li>
+              <li>輸入活動持續時間，例如早上 10:00 到晚上 19:00，請填 9 小時。</li>
+              <li>系統會把全球各點位換算成台灣時間，顯示每個地點的活動開始～結束時間。</li>
+              <li>手機版會以卡片顯示，可直接按 GPS 複製；桌機版維持表格比較。</li>
+              <li>下方半球分類可快速判斷東 / 西半球與南 / 北半球。</li>
+            </ol>
           </div>
 
           <div class="schedule-start-grid">
@@ -373,10 +386,9 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               <div class="datetime-pair">
                 <input type="date" [(ngModel)]="plannerStartDate" (ngModelChange)="onPlannerChanged()">
                 <input
-                  type="text"
+                  type="time"
                   class="time-input"
-                  inputmode="numeric"
-                  maxlength="5"
+                  step="60"
                   placeholder="14:00"
                   [(ngModel)]="plannerStartTime"
                   (ngModelChange)="onPlannerChanged()"
@@ -384,10 +396,15 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               </div>
             </label>
 
+            <label class="form-field">
+              <span>活動持續時間（小時）</span>
+              <input type="number" min="0.5" max="24" step="0.5" [(ngModel)]="plannerEventDurationHours" (ngModelChange)="onPlannerChanged()">
+            </label>
+
             <div class="planner-summary">
               <span>活動時段基準</span>
-              <strong>{{ getFormattedPlannerStartDateTime() }}</strong>
-              <small>此欄位會和「冷卻銜接」分頁的目前活動開始日期時間同步。</small>
+              <strong>{{ getFormattedPlannerStartDateTime() }}～{{ getFormattedPlannerEventEndDateTime() }}</strong>
+              <small>此欄位會和「冷卻銜接」分頁的目前活動開始日期時間與持續時間同步。</small>
             </div>
           </div>
 
@@ -396,11 +413,11 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
             <button type="button" class="btn-reset compact" (click)="eventSearchText = ''">清除</button>
           </div>
 
-          <div class="responsive-table desktop-data-table">
+          <div class="responsive-table desktop-list-table">
             <table>
               <thead>
                 <tr>
-                  <th>活動開始（台灣時間）</th>
+                  <th>活動時段（台灣時間）</th>
                   <th>地點</th>
                   <th>GPS</th>
                   <th>半球</th>
@@ -408,7 +425,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               </thead>
               <tbody>
                 <tr *ngFor="let row of getFilteredScheduleRows()">
-                  <td class="time-cell">{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}</td>
+                  <td class="time-cell">{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}～{{ formatAbsMinutes(getScheduleEndAbsMinutes(row)) }}</td>
                   <td>
                     <strong>{{ row.flag }} {{ row.country }} {{ row.city }}</strong>
                     <small>{{ row.place }}</small>
@@ -433,38 +450,26 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
             </table>
           </div>
 
-          <div class="mobile-card-list schedule-mobile-cards">
-            <article class="list-card" *ngFor="let row of getFilteredScheduleRows()">
-              <div class="list-card-header">
-                <div>
-                  <span class="list-card-time">{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}</span>
-                  <h4>{{ row.flag }} {{ row.country }} {{ row.city }}</h4>
-                </div>
+          <div class="mobile-card-list schedule-card-list">
+            <article class="list-item-card" *ngFor="let row of getFilteredScheduleRows()">
+              <div class="card-row-top">
+                <strong>{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}～{{ formatAbsMinutes(getScheduleEndAbsMinutes(row)) }}</strong>
+                <span class="hemi-tag">{{ getEastWest(row) }}</span>
               </div>
-
-              <div class="list-card-body">
-                <div class="list-card-field">
-                  <span>地點</span>
-                  <strong>{{ row.place }}</strong>
-                </div>
-
-                <div class="list-card-field">
-                  <span>GPS</span>
-                  <button
-                    type="button"
-                    class="gps-button"
-                    [class.copied]="isGpsCopied(row)"
-                    [attr.aria-label]="isGpsCopied(row) ? 'GPS 已複製' : '複製 GPS'"
-                    (click)="copyGps(row)">
-                    <span class="gps-value">{{ getGpsText(row) }}</span>
-                    <span class="copy-label">{{ isGpsCopied(row) ? '已複製' : '複製' }}</span>
-                  </button>
-                </div>
-
-                <div class="list-card-tags">
-                  <span class="hemi-tag">{{ getNorthSouth(row) }}</span>
-                  <span class="hemi-tag">{{ getEastWest(row) }}</span>
-                </div>
+              <div class="card-place">{{ row.flag }} {{ row.country }} {{ row.city }}</div>
+              <div class="card-sub">{{ row.place }}</div>
+              <button
+                type="button"
+                class="gps-button card-gps-button"
+                [class.copied]="isGpsCopied(row)"
+                [attr.aria-label]="isGpsCopied(row) ? 'GPS 已複製' : '複製 GPS'"
+                (click)="copyGps(row)">
+                <span class="gps-value">{{ getGpsText(row) }}</span>
+                <span class="copy-label">{{ isGpsCopied(row) ? '已複製' : '複製' }}</span>
+              </button>
+              <div class="card-tags">
+                <span class="hemi-tag">{{ getNorthSouth(row) }}</span>
+                <span class="hemi-tag">{{ getEastWest(row) }}</span>
               </div>
             </article>
           </div>
@@ -524,7 +529,20 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               <h2>當地活動時間換算</h2>
               <p>適用於官方公告已指定「某地當地時間」的活動。選擇活動地點並輸入官方公告的當地日期時間，系統會換算成台灣時間。</p>
             </div>
-            <span class="hint-pill">此功能不同於「活動時段/區域分類」的全球接力時段表；這裡是單一地點的官方當地時間換算。</span>
+            <div class="panel-actions inline-help-actions">
+              <span class="hint-pill">此功能不同於「活動時段/區域分類」的全球接力時段表；這裡是單一地點的官方當地時間換算。</span>
+              <button type="button" class="help-button" [class.active]="isHelpOpen('official')" (click)="toggleHelp('official')" aria-label="官方時間使用說明" title="使用說明">?</button>
+            </div>
+          </div>
+
+          <div class="help-card" *ngIf="isHelpOpen('official')">
+            <h3>官方時間換算使用步驟</h3>
+            <ol>
+              <li>當官方公告寫「某城市當地時間」時，先選擇該活動地點。</li>
+              <li>輸入官方公告的當地日期與當地時間。</li>
+              <li>系統會依該城市時區換算成台灣時間。</li>
+              <li>這裡只處理單一地點官方當地時間，不等同於全球活動接力時段表。</li>
+            </ol>
           </div>
 
           <div class="official-grid">
@@ -545,10 +563,9 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
             <label class="form-field">
               <span>官方當地時間</span>
               <input
-                type="text"
+                type="time"
                 class="time-input"
-                inputmode="numeric"
-                maxlength="5"
+                step="60"
                 placeholder="10:00"
                 [(ngModel)]="officialLocalTime"
                 (blur)="normalizeOfficialTime()">
@@ -597,10 +614,23 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
               <p>預設顯示活動地點清單，也可搜尋一般國家、城市、中文或英文關鍵字。</p>
             </div>
 
-            <div class="legend" aria-label="圖例">
-              <span class="legend-item"><span class="box ref-box"></span> 台灣基準</span>
-              <span class="legend-item"><span class="box normal-box"></span> 其他時區</span>
+            <div class="panel-actions">
+              <div class="legend" aria-label="圖例">
+                <span class="legend-item"><span class="box ref-box"></span> 台灣基準</span>
+                <span class="legend-item"><span class="box normal-box"></span> 其他時區</span>
+              </div>
+              <button type="button" class="help-button" [class.active]="isHelpOpen('clock')" (click)="toggleHelp('clock')" aria-label="時間對照使用說明" title="使用說明">?</button>
             </div>
+          </div>
+
+          <div class="help-card" *ngIf="isHelpOpen('clock')">
+            <h3>時間對照使用步驟</h3>
+            <ol>
+              <li>預設以台灣目前時間為基準，顯示各城市當地時間。</li>
+              <li>可搜尋國家、城市、中文或英文關鍵字。</li>
+              <li>桌機可滑鼠移到長條，手機可點選城市列，查看時差與距離。</li>
+              <li>下方滑桿可模擬台灣 24 小時內不同時間點，按「回到目前時間」可恢復即時更新。</li>
+            </ol>
           </div>
 
           <div class="search-section">
@@ -981,14 +1011,28 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
     .planner-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: minmax(360px, 1.6fr) minmax(120px, 0.42fr) minmax(360px, 1.6fr) minmax(120px, 0.42fr);
       gap: 14px;
       margin-bottom: 18px;
     }
 
+    .planner-grid .planner-summary {
+      grid-column: 1 / -1;
+    }
+
+    .planner-grid > .form-field:nth-child(2),
+    .planner-grid > .form-field:nth-child(4) {
+      min-width: 0;
+    }
+
+    .planner-grid > .form-field:nth-child(2) input,
+    .planner-grid > .form-field:nth-child(4) input {
+      text-align: center;
+    }
+
     .schedule-start-grid {
       display: grid;
-      grid-template-columns: minmax(260px, 420px) minmax(260px, 1fr);
+      grid-template-columns: minmax(270px, 440px) minmax(160px, 220px) minmax(300px, 1fr);
       gap: 14px;
       align-items: stretch;
       margin-bottom: 16px;
@@ -996,7 +1040,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
     .official-grid {
       display: grid;
-      grid-template-columns: minmax(260px, 1.5fr) minmax(160px, 0.85fr) minmax(120px, 0.65fr) minmax(260px, 1fr);
+      grid-template-columns: minmax(260px, 1.4fr) minmax(170px, 0.85fr) minmax(140px, 0.65fr) minmax(260px, 1fr);
       gap: 14px;
       margin-bottom: 18px;
     }
@@ -1015,8 +1059,89 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 
     .datetime-pair {
       display: grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(88px, 0.75fr);
+      grid-template-columns: minmax(190px, 1fr) minmax(156px, 156px);
       gap: 8px;
+    }
+
+    .datetime-pair input[type="date"],
+    .datetime-pair input[type="time"] {
+      min-width: 0;
+      min-height: 48px;
+    }
+
+    .datetime-pair input[type="time"] {
+      min-width: 156px;
+    }
+
+    .time-input {
+      color-scheme: dark;
+    }
+
+    .panel-actions {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .inline-help-actions {
+      flex-wrap: nowrap;
+      align-items: center;
+    }
+
+    .inline-help-actions .hint-pill {
+      max-width: 690px;
+      width: auto;
+    }
+
+    .help-button {
+      flex: 0 0 auto;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 1px solid rgba(125, 211, 252, 0.36);
+      background: rgba(125, 211, 252, 0.12);
+      color: #BAE6FD;
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.2s, transform 0.2s;
+    }
+
+    .help-button:hover,
+    .help-button:focus,
+    .help-button.active {
+      background: #7DD3FC;
+      color: #082F49;
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .help-card {
+      margin: -4px 0 18px;
+      padding: 16px 18px;
+      border: 1px solid rgba(125, 211, 252, 0.26);
+      border-radius: 18px;
+      background: rgba(14, 165, 233, 0.10);
+      color: #CBD5E1;
+    }
+
+    .help-card h3 {
+      margin: 0 0 10px;
+      color: #FFFFFF;
+      font-size: 17px;
+    }
+
+    .help-card ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .help-card li {
+      margin: 6px 0;
+      line-height: 1.6;
+      font-size: 13px;
     }
 
     .field-hint {
@@ -1204,73 +1329,52 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
       display: none;
     }
 
-    .list-card {
+    .list-item-card {
       border: 1px solid rgba(148, 163, 184, 0.18);
-      background:
-        linear-gradient(160deg, rgba(15, 23, 42, 0.78), rgba(2, 6, 23, 0.52));
-      border-radius: 18px;
-      padding: 15px;
-      box-shadow: 0 14px 34px rgba(2, 6, 23, 0.24);
+      background: rgba(15, 23, 42, 0.58);
+      border-radius: 16px;
+      padding: 14px;
+      display: grid;
+      gap: 9px;
     }
 
-    .list-card.best {
+    .list-item-card.best-card {
       border-color: rgba(250, 204, 21, 0.38);
-      background:
-        linear-gradient(160deg, rgba(250, 204, 21, 0.12), rgba(2, 6, 23, 0.52));
+      background: linear-gradient(160deg, rgba(250, 204, 21, 0.12), rgba(15, 23, 42, 0.58));
     }
 
-    .list-card-header {
+    .card-row-top {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
-      align-items: flex-start;
-      padding-bottom: 12px;
-      margin-bottom: 12px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-    }
-
-    .list-card-header h4 {
-      margin: 6px 0 0;
+      align-items: center;
+      gap: 10px;
       color: #FFFFFF;
-      font-size: 17px;
-      line-height: 1.35;
     }
 
-    .list-card-time {
-      display: inline-flex;
-      color: #7DD3FC;
-      font-size: 15px;
+    .card-place {
+      color: #FFFFFF;
+      font-size: 16px;
       font-weight: 900;
-      line-height: 1.3;
     }
 
-    .list-card-body {
-      display: grid;
-      gap: 12px;
+    .card-sub,
+    .card-note {
+      color: #94A3B8;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
-    .list-card-field {
-      display: grid;
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
       gap: 6px;
     }
 
-    .list-card-field > span {
-      color: #94A3B8;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .list-card-field strong {
-      color: #E2E8F0;
-      font-size: 14px;
-      line-height: 1.5;
-      overflow-wrap: anywhere;
-    }
-
-    .list-card-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .card-gps-button {
+      width: 100%;
+      justify-content: space-between;
+      border-radius: 14px;
+      padding: 10px 12px;
     }
 
     .cooldown-reference-card {
@@ -1716,10 +1820,31 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
         flex-direction: column;
       }
 
+      .panel-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .inline-help-actions {
+        width: 100%;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+      }
+
+      .inline-help-actions .hint-pill {
+        flex: 1 1 auto;
+        width: auto;
+        max-width: none;
+      }
+
       .hint-pill {
         max-width: none;
         width: 100%;
         box-sizing: border-box;
+      }
+
+      .inline-help-actions .hint-pill {
+        width: auto;
       }
 
       .legend {
@@ -1805,6 +1930,16 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
         font-size: 21px;
       }
 
+      .help-card {
+        padding: 14px;
+        margin-bottom: 16px;
+      }
+
+      .help-button {
+        width: 40px;
+        height: 40px;
+      }
+
       .planner-grid,
       .schedule-start-grid,
       .official-grid {
@@ -1834,7 +1969,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
         border-radius: 14px;
       }
 
-      .desktop-data-table {
+      .desktop-list-table {
         display: none;
       }
 
@@ -1843,33 +1978,12 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
         gap: 12px;
       }
 
-      .mobile-card-list + .region-note-section {
-        margin-top: 22px;
-      }
-
-      .list-card-header {
-        align-items: flex-start;
-      }
-
-      .list-card-header .status-badge {
-        flex: 0 0 auto;
-      }
-
-      .list-card .gps-button {
-        width: 100%;
-        justify-content: space-between;
-        border-radius: 14px;
-        padding: 9px 10px;
-        white-space: normal;
-      }
-
-      .list-card .gps-value {
-        overflow-wrap: anywhere;
-        text-align: left;
-      }
-
       table {
         min-width: 840px;
+      }
+
+      .cooldown-reference-table {
+        min-width: 680px;
       }
 
       .hover-info {
@@ -1927,6 +2041,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
 })
 export class AppComponent implements OnInit, OnDestroy {
   activeTab: ActiveTab = 'schedule';
+  activeHelpTab: ActiveTab | null = null;
 
   searchText: string = '';
   eventSearchText: string = '';
@@ -1936,6 +2051,7 @@ export class AppComponent implements OnInit, OnDestroy {
   plannerCooldownStartDate: string = '';
   plannerCooldownStartTime: string = '18:00';
   plannerCooldownHours: number = 2;
+  plannerEventDurationHours: number = 9;
 
   officialLocationIndex: number = 0;
   officialLocalDate: string = '';
@@ -2049,6 +2165,14 @@ export class AppComponent implements OnInit, OnDestroy {
     this.activeTab = tab;
   }
 
+  toggleHelp(tab: ActiveTab): void {
+    this.activeHelpTab = this.activeHelpTab === tab ? null : tab;
+  }
+
+  isHelpOpen(tab: ActiveTab): boolean {
+    return this.activeHelpTab === tab;
+  }
+
   private initializePlannerDefaults(): void {
     const taipeiNow = this.getTaipeiNowParts();
     const yyyy = String(taipeiNow.year).padStart(4, '0');
@@ -2061,6 +2185,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.plannerCooldownStartDate = today;
     this.plannerCooldownStartTime = '18:00';
     this.plannerCooldownHours = 2;
+    this.plannerEventDurationHours = 9;
   }
 
   private initializeOfficialDefaults(): void {
@@ -2257,6 +2382,10 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.formatAbsMinutes(this.getPlannerReadyAbsMinutes());
   }
 
+  getFormattedPlannerEventEndDateTime(): string {
+    return this.formatAbsMinutes(this.getPlannerStartAbsMinutes() + this.getEventDurationMinutes());
+  }
+
   getLocationsAtPlannerStart(): ScheduleRow[] {
     const targetAbsMinutes = this.parsePlannerDateTimeToAbsMinutes(this.getPlannerStartDateTimeValue());
     return this.scheduleRows.filter(row => this.getScheduleStartAbsMinutes(row) === targetAbsMinutes);
@@ -2266,13 +2395,22 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.getPlannerStartAbsMinutes() + this.getScheduleDeltaFromTaiwan(row);
   }
 
+  getScheduleEndAbsMinutes(row: ScheduleRow): number {
+    return this.getScheduleStartAbsMinutes(row) + this.getEventDurationMinutes();
+  }
+
+  private getEventDurationMinutes(): number {
+    const hours = Number(this.plannerEventDurationHours || 0);
+    return Math.max(1, Math.round(hours * 60));
+  }
+
   private getScheduleDeltaFromTaiwan(row: ScheduleRow): number {
     const taiwanReferenceStartAbsMinutes = this.getTaiwanReferenceStartAbsMinutes();
-    const deltaMinutes = row.startAbsMinutes - taiwanReferenceStartAbsMinutes;
 
-    // 活動時段表要以台灣目前活動開始日期時間為第一筆，
-    // 圖片中比台灣早的時區，應視為下一輪往後銜接，而不是排在台灣前面。
-    return deltaMinutes < 0 ? deltaMinutes + 1440 : deltaMinutes;
+    // 保留各地點相對台灣活動開始時間的真實時差。
+    // 例如台灣 7/7 10:00 開始時，吉里巴斯會落在台灣 7/7 04:00，
+    // 巴西聖保羅會落在台灣 7/7 21:00，方便判斷「提前可打」與「晚上冷卻後可接」。
+    return row.startAbsMinutes - taiwanReferenceStartAbsMinutes;
   }
 
   isBestRecommendation(row: ScheduleRow): boolean {
@@ -2297,8 +2435,27 @@ export class AppComponent implements OnInit, OnDestroy {
   getPlannerRows(): ScheduleRow[] {
     const readyAbs = this.getPlannerReadyAbsMinutes();
     return this.scheduleRows
-      .filter(row => this.getScheduleStartAbsMinutes(row) >= readyAbs)
-      .sort((a, b) => this.getScheduleStartAbsMinutes(a) - this.getScheduleStartAbsMinutes(b));
+      .filter(row => this.getScheduleEndAbsMinutes(row) >= readyAbs)
+      .sort((a, b) => this.comparePlannerRows(a, b, readyAbs));
+  }
+
+  private comparePlannerRows(a: ScheduleRow, b: ScheduleRow, readyAbs: number): number {
+    const aStart = this.getScheduleStartAbsMinutes(a);
+    const bStart = this.getScheduleStartAbsMinutes(b);
+    const aEnd = this.getScheduleEndAbsMinutes(a);
+    const bEnd = this.getScheduleEndAbsMinutes(b);
+    const aFuture = aStart >= readyAbs ? 0 : 1;
+    const bFuture = bStart >= readyAbs ? 0 : 1;
+
+    if (aFuture !== bFuture) {
+      return aFuture - bFuture;
+    }
+
+    if (aFuture === 0) {
+      return aStart - bStart;
+    }
+
+    return aEnd - bEnd;
   }
 
   getBestRecommendation(): ScheduleRow | null {
@@ -2308,20 +2465,36 @@ export class AppComponent implements OnInit, OnDestroy {
 
   getRecommendationReason(row: ScheduleRow): string {
     const readyAbs = this.getPlannerReadyAbsMinutes();
-    const waitMinutes = this.getScheduleStartAbsMinutes(row) - readyAbs;
+    const startAbs = this.getScheduleStartAbsMinutes(row);
+    const endAbs = this.getScheduleEndAbsMinutes(row);
+
+    if (readyAbs >= startAbs && readyAbs <= endAbs) {
+      const remainMinutes = endAbs - readyAbs;
+      return remainMinutes > 0
+        ? `冷卻完成時仍在活動中，剩 ${this.formatDurationText(remainMinutes)}`
+        : '冷卻完成時剛好活動結束';
+    }
+
+    const waitMinutes = startAbs - readyAbs;
     if (waitMinutes === 0) {
       return '剛好銜接';
     }
 
-    const h = Math.floor(waitMinutes / 60);
-    const m = waitMinutes % 60;
+    return `冷卻完成後再等 ${this.formatDurationText(waitMinutes)}`;
+  }
+
+  private formatDurationText(totalMinutes: number): string {
+    const minutes = Math.max(0, Math.round(totalMinutes));
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+
     if (h > 0 && m > 0) {
-      return `冷卻完成後再等 ${h} 小時 ${m} 分`;
+      return `${h} 小時 ${m} 分`;
     }
     if (h > 0) {
-      return `冷卻完成後再等 ${h} 小時`;
+      return `${h} 小時`;
     }
-    return `冷卻完成後再等 ${m} 分`;
+    return `${m} 分`;
   }
 
   getFilteredScheduleRows(): ScheduleRow[] {
