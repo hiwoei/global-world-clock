@@ -28,6 +28,7 @@ interface ScheduleRow extends EventLocation {
 }
 
 type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
+type ConnectionStatus = 'available' | 'upcoming' | 'ended';
 
 @Component({
   selector: 'app-root',
@@ -202,7 +203,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
                 <div class="best-sub">{{ best.place }}</div>
                 <div class="gps-line">GPS：{{ best.lat.toFixed(5) }},{{ best.lon.toFixed(5) }}</div>
                 <p class="result-note">
-                  原因：此地點活動開始時間最接近且不早於可銜接時間 {{ getFormattedPlannerReadyDateTime() }}。
+                  原因：優先推薦冷卻完成時可立即進場且剩餘活動時間較長的地點；若沒有可立即銜接地點，才推薦等待時間最短的下一場。
                 </p>
               </ng-container>
 
@@ -222,14 +223,19 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
                     <th>活動時段（台灣時間）</th>
                     <th>國家 / 地點</th>
                     <th>GPS</th>
+                    <th>限定資訊</th>
+                    <th>距台灣</th>
                     <th>狀態</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr *ngFor="let row of getPlannerRows()">
                     <td>
-                      <span class="status-badge" [class.best]="isBestRecommendation(row)">
-                        {{ isBestRecommendation(row) ? '最佳' : '可接' }}
+                      <span
+                        class="status-badge"
+                        [class.best]="isBestRecommendation(row)"
+                        [class.waiting]="!isBestRecommendation(row) && getConnectionStatus(row) === 'upcoming'">
+                        {{ getRecommendationLabel(row) }}
                       </span>
                     </td>
                     <td>{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}～{{ formatAbsMinutes(getScheduleEndAbsMinutes(row)) }}</td>
@@ -248,6 +254,13 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
                         <span class="copy-label">{{ isGpsCopied(row) ? '已複製' : '複製' }}</span>
                       </button>
                     </td>
+                    <td>
+                      <div class="hemi-tag-stack">
+                        <span class="hemi-tag">{{ getNorthSouthPokemon(row) }}</span>
+                        <span class="hemi-tag">{{ getEastWestPokemon(row) }}</span>
+                      </div>
+                    </td>
+                    <td>{{ getDistanceFromTaipeiText(row) }}</td>
                     <td>{{ getRecommendationReason(row) }}</td>
                   </tr>
                 </tbody>
@@ -257,13 +270,21 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
             <div class="mobile-card-list cooldown-card-list">
               <article class="list-item-card" [class.best-card]="isBestRecommendation(row)" *ngFor="let row of getPlannerRows()">
                 <div class="card-row-top">
-                  <span class="status-badge" [class.best]="isBestRecommendation(row)">
-                    {{ isBestRecommendation(row) ? '最佳' : '可接' }}
+                  <span
+                    class="status-badge"
+                    [class.best]="isBestRecommendation(row)"
+                    [class.waiting]="!isBestRecommendation(row) && getConnectionStatus(row) === 'upcoming'">
+                    {{ getRecommendationLabel(row) }}
                   </span>
                   <strong>{{ formatAbsMinutes(getScheduleStartAbsMinutes(row)) }}～{{ formatAbsMinutes(getScheduleEndAbsMinutes(row)) }}</strong>
                 </div>
                 <div class="card-place">{{ row.flag }} {{ row.country }} {{ row.city }}</div>
                 <div class="card-sub">{{ row.place }}</div>
+                <div class="card-tags">
+                  <span class="hemi-tag">{{ getNorthSouthPokemon(row) }}</span>
+                  <span class="hemi-tag">{{ getEastWestPokemon(row) }}</span>
+                  <span class="hemi-tag">{{ getDistanceFromTaipeiText(row) }}</span>
+                </div>
                 <button
                   type="button"
                   class="gps-button card-gps-button"
@@ -777,7 +798,7 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
         <h3>功能完整說明</h3>
         <ul>
           <li><strong>活動時段/區域分類：</strong>採用固定全球活動地點清單，活動開始會先列出台灣目前活動開始日期時間，後續地點依全球活動時間順序往後推算，並在同一分頁依 GPS 自動判斷東西半球與南北半球；只列地點分布，不寫死會隨活動變動的限定內容清單。</li>
-          <li><strong>冷卻銜接：</strong>依台灣活動時間與冷卻時間推算下一個可參與國家，預設使用當日「14:00 活動、18:00 起算冷卻、2 小時後銜接」。</li>
+          <li><strong>冷卻銜接：</strong>依台灣活動時間與冷卻時間推算下一個可參與國家，優先列出冷卻完成時仍在活動中的地點，再列出即將開始的地點；同時顯示半球限定資訊與距台灣公里數。預設使用當日「14:00 活動、18:00 起算冷卻、2 小時後銜接」。</li>
           <li><strong>活動時間換算：</strong>當公告指定某地當地日期時間時，可選擇地點並輸入該地當地時間，系統會換算成台灣時間，避免和全球活動接力時段混用。</li>
           <li><strong>時間對照：</strong>保留原本 RWD、手機點選 bar、桌機 hover、搜尋、Open-Meteo 動態查詢、距離與 API 錯誤處理，並以年月日時顯示各地當地時間。</li>
         </ul>
@@ -1483,8 +1504,25 @@ type ActiveTab = 'cooldown' | 'schedule' | 'official' | 'clock';
       color: #FDE68A;
     }
 
+    .status-badge.waiting {
+      background: rgba(125, 211, 252, 0.14);
+      color: #BAE6FD;
+    }
+
     .hemi-tag + .hemi-tag {
       margin-left: 6px;
+    }
+
+    .hemi-tag-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .hemi-tag-stack .hemi-tag + .hemi-tag,
+    .card-tags .hemi-tag + .hemi-tag {
+      margin-left: 0;
     }
 
     .exclusive-grid {
@@ -2089,6 +2127,7 @@ export class AppComponent implements OnInit, OnDestroy {
     { flag: '🇯🇵', country: '日本', city: '東京', place: '池袋西口公園', lat: 35.7297, lon: 139.7099, timeZone: 'Asia/Tokyo', startDayOffset: 0, startTime: '13:00', searchKeys: 'japan tokyo ueno park 日本 東京 池袋西口公園' },
     { flag: '🇹🇼', country: '台灣', city: '台北', place: '大安森林公園', lat: 25.0307, lon: 121.5352, timeZone: 'Asia/Taipei', startDayOffset: 0, startTime: '14:00', searchKeys: 'taiwan taipei daan forest park 台灣 台北 大安森林公園' },
     { flag: '🇹🇼', country: '台灣', city: '台北', place: '台北車站', lat: 25.0478, lon: 121.5170, timeZone: 'Asia/Taipei', startDayOffset: 0, startTime: '14:00', searchKeys: 'taiwan taipei main station taipei station 台灣 台北 台北車站 北車' },
+    { flag: '🇲🇾', country: '馬來西亞', city: '吉隆坡', place: '雙峰塔公園', lat: 3.15528, lon: 101.71445, timeZone: 'Asia/Kuala_Lumpur', startDayOffset: 0, startTime: '14:00', searchKeys: 'malaysia kuala lumpur klcc park petronas twin towers 馬來西亞 吉隆坡 雙峰塔公園 雙子星塔 KLCC'},
     { flag: '🇻🇳', country: '越南', city: '胡志明市', place: '陶丹公園', lat: 10.7741, lon: 106.6927, timeZone: 'Asia/Ho_Chi_Minh', startDayOffset: 0, startTime: '15:00', searchKeys: 'vietnam ho chi minh tao dan park 越南 胡志明市 陶丹公園' },
     { flag: '🇧🇩', country: '孟加拉', city: '達卡', place: '達卡兒童公園', lat: 23.7348, lon: 90.3976, timeZone: 'Asia/Dhaka', startDayOffset: 0, startTime: '16:00', searchKeys: 'bangladesh dhaka children park 孟加拉 達卡 兒童公園' },
     { flag: '🇮🇳', country: '印度', city: '新德里', place: '洛迪花園', lat: 28.5929, lon: 77.2206, timeZone: 'Asia/Kolkata', startDayOffset: 0, startTime: '16:30', searchKeys: 'india new delhi lodhi garden 印度 新德里 洛迪花園' },
@@ -2185,7 +2224,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.plannerCooldownStartDate = today;
     this.plannerCooldownStartTime = '18:00';
     this.plannerCooldownHours = 2;
-    this.plannerEventDurationHours = 9;
+    this.plannerEventDurationHours = 3;
   }
 
   private initializeOfficialDefaults(): void {
@@ -2435,23 +2474,63 @@ export class AppComponent implements OnInit, OnDestroy {
   getPlannerRows(): ScheduleRow[] {
     const readyAbs = this.getPlannerReadyAbsMinutes();
     return this.scheduleRows
-      .filter(row => this.getScheduleEndAbsMinutes(row) >= readyAbs)
+      .filter(row => this.getConnectionStatus(row, readyAbs) !== 'ended')
       .sort((a, b) => this.comparePlannerRows(a, b, readyAbs));
   }
 
+  getConnectionStatus(row: ScheduleRow, readyAbs: number = this.getPlannerReadyAbsMinutes()): ConnectionStatus {
+    const startAbs = this.getScheduleStartAbsMinutes(row);
+    const endAbs = this.getScheduleEndAbsMinutes(row);
+
+    if (readyAbs >= startAbs && readyAbs < endAbs) {
+      return 'available';
+    }
+
+    if (readyAbs < startAbs) {
+      return 'upcoming';
+    }
+
+    return 'ended';
+  }
+
   private comparePlannerRows(a: ScheduleRow, b: ScheduleRow, readyAbs: number): number {
+    const statusRank: Record<ConnectionStatus, number> = {
+      available: 0,
+      upcoming: 1,
+      ended: 2
+    };
+
+    const aStatus = this.getConnectionStatus(a, readyAbs);
+    const bStatus = this.getConnectionStatus(b, readyAbs);
+
+    if (aStatus !== bStatus) {
+      return statusRank[aStatus] - statusRank[bStatus];
+    }
+
     const aStart = this.getScheduleStartAbsMinutes(a);
     const bStart = this.getScheduleStartAbsMinutes(b);
     const aEnd = this.getScheduleEndAbsMinutes(a);
     const bEnd = this.getScheduleEndAbsMinutes(b);
-    const aFuture = aStart >= readyAbs ? 0 : 1;
-    const bFuture = bStart >= readyAbs ? 0 : 1;
 
-    if (aFuture !== bFuture) {
-      return aFuture - bFuture;
+    if (aStatus === 'available') {
+      const aRemain = aEnd - readyAbs;
+      const bRemain = bEnd - readyAbs;
+
+      if (aRemain !== bRemain) {
+        return bRemain - aRemain;
+      }
+
+      return aStart - bStart;
     }
 
-    if (aFuture === 0) {
+    if (aStatus === 'upcoming') {
+      const aWait = aStart - readyAbs;
+      const bWait = bStart - readyAbs;
+
+      if (aWait !== bWait) {
+        return aWait - bWait;
+      }
+
       return aStart - bStart;
     }
 
@@ -2463,24 +2542,48 @@ export class AppComponent implements OnInit, OnDestroy {
     return rows.length > 0 ? rows[0] : null;
   }
 
+  getRecommendationLabel(row: ScheduleRow): string {
+    if (this.isBestRecommendation(row)) {
+      return '最佳';
+    }
+
+    return this.getConnectionStatus(row) === 'available' ? '可接' : '等待';
+  }
+
   getRecommendationReason(row: ScheduleRow): string {
     const readyAbs = this.getPlannerReadyAbsMinutes();
     const startAbs = this.getScheduleStartAbsMinutes(row);
     const endAbs = this.getScheduleEndAbsMinutes(row);
+    const status = this.getConnectionStatus(row, readyAbs);
 
-    if (readyAbs >= startAbs && readyAbs <= endAbs) {
+    if (status === 'available') {
       const remainMinutes = endAbs - readyAbs;
-      return remainMinutes > 0
-        ? `冷卻完成時仍在活動中，剩 ${this.formatDurationText(remainMinutes)}`
-        : '冷卻完成時剛好活動結束';
+      return `冷卻完成後可直接進場，該地活動尚餘 ${this.formatDurationText(remainMinutes)}`;
     }
 
-    const waitMinutes = startAbs - readyAbs;
-    if (waitMinutes === 0) {
-      return '剛好銜接';
-    }
+    if (status === 'upcoming') {
+  const waitMinutes = startAbs - readyAbs;
+  const fullDurationText = this.formatDurationText(endAbs - startAbs);
 
-    return `冷卻完成後再等 ${this.formatDurationText(waitMinutes)}`;
+  return waitMinutes > 0
+    ? `冷卻完成後再等 ${this.formatDurationText(waitMinutes)}，可完整參與 ${fullDurationText}`
+    : `剛好銜接，可完整參與 ${fullDurationText}`;
+}
+
+    return '活動已結束，不建議銜接';
+  }
+
+  getNorthSouthPokemon(row: EventLocation): string {
+    return row.lat >= 0 ? '北半球' : '南半球';
+  }
+
+  getEastWestPokemon(row: EventLocation): string {
+    return row.lon >= 0 ? '東半球' : '西半球';
+  }
+
+  getDistanceFromTaipeiText(row: EventLocation): string {
+    const distance = this.calculateDistanceToTaipei(row.lat, row.lon);
+    return distance > 0 ? `約 ${distance.toLocaleString('zh-TW')} 公里` : '台灣基準';
   }
 
   private formatDurationText(totalMinutes: number): string {
