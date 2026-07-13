@@ -2125,6 +2125,7 @@ export class AppComponent implements OnInit, OnDestroy {
     { flag: '🇦🇺', country: '澳洲', city: '阿德萊德', place: '慶典中心', lat: -34.9191, lon: 138.5988, timeZone: 'Australia/Adelaide', startDayOffset: 0, startTime: '12:30', searchKeys: 'australia adelaide festival centre 澳洲 阿德萊德 慶典中心' },
     { flag: '🇯🇵', country: '日本', city: '東京', place: '上野恩賜公園', lat: 35.7140, lon: 139.7717, timeZone: 'Asia/Tokyo', startDayOffset: 0, startTime: '13:00', searchKeys: 'japan tokyo ueno park 日本 東京 上野恩賜公園' },
     { flag: '🇯🇵', country: '日本', city: '東京', place: '池袋西口公園', lat: 35.7297, lon: 139.7099, timeZone: 'Asia/Tokyo', startDayOffset: 0, startTime: '13:00', searchKeys: 'japan tokyo ueno park 日本 東京 池袋西口公園' },
+    { flag: '🇰🇷', country: '韓國', city: '首爾', place: '樂天世界塔／石村湖', lat: 37.5125, lon: 127.1028, timeZone: 'Asia/Seoul', startDayOffset: 0, startTime: '13:00', searchKeys: 'korea seoul lotte world tower seokchon lake 韓國 首爾 樂天世界塔 石村湖' },
     { flag: '🇹🇼', country: '台灣', city: '台北', place: '大安森林公園', lat: 25.0307, lon: 121.5352, timeZone: 'Asia/Taipei', startDayOffset: 0, startTime: '14:00', searchKeys: 'taiwan taipei daan forest park 台灣 台北 大安森林公園' },
     { flag: '🇹🇼', country: '台灣', city: '台北', place: '台北車站', lat: 25.0478, lon: 121.5170, timeZone: 'Asia/Taipei', startDayOffset: 0, startTime: '14:00', searchKeys: 'taiwan taipei main station taipei station 台灣 台北 台北車站 北車' },
     { flag: '🇲🇾', country: '馬來西亞', city: '吉隆坡', place: '雙峰塔公園', lat: 3.15528, lon: 101.71445, timeZone: 'Asia/Kuala_Lumpur', startDayOffset: 0, startTime: '14:00', searchKeys: 'malaysia kuala lumpur klcc park petronas twin towers 馬來西亞 吉隆坡 雙峰塔公園 雙子星塔 KLCC'},
@@ -2134,6 +2135,7 @@ export class AppComponent implements OnInit, OnDestroy {
     { flag: '🇲🇻', country: '馬爾地夫', city: '馬律', place: '市中心', lat: 4.1725, lon: 73.5089, timeZone: 'Indian/Maldives', startDayOffset: 0, startTime: '17:00', searchKeys: 'maldives male city center 馬爾地夫 馬律 市中心' },
     { flag: '🇦🇪', country: '阿拉伯聯合大公國', city: '迪拜', place: '碼頭', lat: 25.0766, lon: 55.1328, timeZone: 'Asia/Dubai', startDayOffset: 0, startTime: '18:00', searchKeys: 'uae dubai marina 阿拉伯聯合大公國 迪拜 碼頭' },
     { flag: '🇬🇷', country: '希臘', city: '拉里薩', place: '卡扎里公園', lat: 39.6418, lon: 22.4133, timeZone: 'Europe/Athens', startDayOffset: 0, startTime: '19:00', searchKeys: 'greece larissa park 希臘 拉里薩 卡扎里公園' },
+    { flag: '🇩🇪', country: '德國', city: '柏林', place: '布蘭登堡門', lat: 52.5163, lon: 13.3777, timeZone: 'Europe/Berlin', startDayOffset: 0, startTime: '20:00', searchKeys: 'germany berlin brandenburg gate 德國 柏林 布蘭登堡門 歐洲' },
     { flag: '🇪🇸', country: '西班牙', city: '扎拉戈沙', place: '化學公園', lat: 41.6619, lon: -0.8935, timeZone: 'Europe/Madrid', startDayOffset: 0, startTime: '20:00', searchKeys: 'spain zaragoza chemistry park 西班牙 扎拉戈沙 化學公園' },
     { flag: '🇬🇧', country: '英國', city: '倫敦', place: '國會廣場', lat: 51.5007, lon: -0.1258, timeZone: 'Europe/London', startDayOffset: 0, startTime: '21:00', searchKeys: 'uk london parliament square 英國 倫敦 國會廣場' },
     { flag: '🇮🇸', country: '冰島', city: '雷克雅維克', place: '音樂廳公園', lat: 64.1412, lon: -21.9440, timeZone: 'Atlantic/Reykjavik', startDayOffset: 0, startTime: '22:00', searchKeys: 'iceland reykjavik harpa park 冰島 雷克雅維克 音樂廳公園' },
@@ -2159,6 +2161,7 @@ export class AppComponent implements OnInit, OnDestroy {
     { name: '泰國 曼谷 (Bangkok)', utcOffset: 7.0, isReference: false, searchKeys: 'thailand bangkok 泰國 曼谷', distanceKm: 2530 },
     { name: '越南 河內 (Hanoi)', utcOffset: 7.0, isReference: false, searchKeys: 'vietnam hanoi 越南 河內', distanceKm: 1650 },
     { name: '印度 新德里 (New Delhi)', utcOffset: 5.5, isReference: false, searchKeys: 'india new delhi 印度 新德里', distanceKm: 4380 },
+    { name: '德國 柏林 (Berlin)', utcOffset: 1.0, isReference: false, searchKeys: 'germany berlin 德國 柏林 歐洲', distanceKm: 8990 },
     { name: '法國 巴黎 (Paris)', utcOffset: 1.0, isReference: false, searchKeys: 'france paris 法國 巴黎 歐洲', distanceKm: 9840 },
     { name: '英國 倫敦 (London)', utcOffset: 0.0, isReference: false, searchKeys: 'uk england london 英國 倫敦', distanceKm: 9780 },
     { name: '美國 洛杉磯 (L.A.)', utcOffset: -8.0, isReference: false, searchKeys: 'usa america united states los angeles california 美國 西岸 洛杉磯 加州', distanceKm: 10920 }
