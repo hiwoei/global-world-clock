@@ -2135,7 +2135,7 @@ export class AppComponent implements OnInit, OnDestroy {
     { flag: '🇮🇳', country: '印度', city: '新德里', place: '洛迪花園', lat: 28.5929, lon: 77.2206, timeZone: 'Asia/Kolkata', startDayOffset: 0, startTime: '16:30', searchKeys: 'india new delhi lodhi garden 印度 新德里 洛迪花園' },
     { flag: '🇲🇻', country: '馬爾地夫', city: '馬律', place: '市中心', lat: 4.1725, lon: 73.5089, timeZone: 'Indian/Maldives', startDayOffset: 0, startTime: '17:00', searchKeys: 'maldives male city center 馬爾地夫 馬律 市中心' },
     { flag: '🇦🇪', country: '阿拉伯聯合大公國', city: '迪拜', place: '碼頭', lat: 25.0766, lon: 55.1328, timeZone: 'Asia/Dubai', startDayOffset: 0, startTime: '18:00', searchKeys: 'uae dubai marina 阿拉伯聯合大公國 迪拜 碼頭' },
-    { flag: '🇸🇦', country: '沙烏地阿拉伯', city: '利雅德', place: '揪團熱點', lat: 24.75695, lon: 46.62942, timeZone: 'Asia/Riyadh', startDayOffset: 0, startTime: '19:00', searchKeys: 'saudi arabia riyadh raid 沙烏地阿拉伯 利雅德 阿拉伯' },    
+    { flag: '🇸🇦', country: '沙烏地阿拉伯', city: '利雅德', place: '利雅德北區', lat: 24.75695, lon: 46.62942, timeZone: 'Asia/Riyadh', startDayOffset: 0, startTime: '19:00', searchKeys: 'saudi arabia riyadh raid 沙烏地阿拉伯 利雅德 阿拉伯' },    
     { flag: '🇬🇷', country: '希臘', city: '拉里薩', place: '卡扎里公園', lat: 39.6418, lon: 22.4133, timeZone: 'Europe/Athens', startDayOffset: 0, startTime: '19:00', searchKeys: 'greece larissa park 希臘 拉里薩 卡扎里公園' },
     { flag: '🇩🇪', country: '德國', city: '柏林', place: '布蘭登堡門', lat: 52.5163, lon: 13.3777, timeZone: 'Europe/Berlin', startDayOffset: 0, startTime: '20:00', searchKeys: 'germany berlin brandenburg gate 德國 柏林 布蘭登堡門 歐洲' },
     { flag: '🇪🇸', country: '西班牙', city: '扎拉戈沙', place: '化學公園', lat: 41.6619, lon: -0.8935, timeZone: 'Europe/Madrid', startDayOffset: 0, startTime: '20:00', searchKeys: 'spain zaragoza chemistry park 西班牙 扎拉戈沙 化學公園' },
